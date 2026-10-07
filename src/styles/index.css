@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand: #1e3a5f;
+  --brand2: #2c5282;
+  --brand-light: #3b82f6;
+  --brand-lighter: #0ea5e9;
+
+  --bg: #f8f9fa;
+  --card: #ffffff;
+  --header-bg: #ffffff;
+
+  --text: #1a202c;
+  --muted: #64748b;
+
+  --success: #28a745;
+  --error: #dc3545;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+
+  --border: #e2e8f0;
+  --shadow: rgba(0, 0, 0, 0.08);
+
+  --dark-bg: #1a202c;
+  --dark-card: #2d3748;
+  --dark-text: #e2e8f0;
+  --dark-border: #4a5568;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  max-width: 100vw;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+body {
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Roboto',
+    'Oxygen',
+    'Ubuntu',
+    'Cantarell',
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+  background-attachment: fixed;
+  color: var(--text);
+  height: 100vh;
+  line-height: 1.6;
+  overflow: hidden;
+}
+
+body.dark {
+  background: linear-gradient(180deg, var(--dark-bg), #0f172a);
+  color: var(--dark-text);
+}

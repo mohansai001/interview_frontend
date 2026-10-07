@@ -1,0 +1,254 @@
+{
+  "stats": [
+    {
+      "label": "Total Interviews",
+      "value": 524,
+      "colorClass": "stat-card--blue"
+    },
+    { "label": "L2 Count", "value": 182, "colorClass": "stat-card--blue" },
+    { "label": "Accepted", "value": 246, "colorClass": "stat-card--green" },
+    { "label": "Rejected", "value": 98, "colorClass": "stat-card--red" }
+  ],
+  "interviews": [
+    {
+      "id": 1,
+      "name": "Rahul Kumar",
+      "email": "rahul.kumar@example.com",
+      "role": "Software Engineer",
+      "l1Score": 78,
+      "status": "Accepted"
+    },
+    {
+      "id": 2,
+      "name": "Priya Sharma",
+      "email": "priya.sharma@example.com",
+      "role": "QA Engineer",
+      "l1Score": 65,
+      "status": "Rejected"
+    },
+    {
+      "id": 3,
+      "name": "Amit Singh",
+      "email": "amit.singh@example.com",
+      "role": "Backend Developer",
+      "l1Score": 82,
+      "status": "Accepted"
+    },
+    {
+      "id": 4,
+      "name": "Sneha Reddy",
+      "email": "sneha.reddy@example.com",
+      "role": "Frontend Developer",
+      "l1Score": 70,
+      "status": "In Review"
+    },
+    {
+      "id": 5,
+      "name": "Vikram Patel",
+      "email": "vikram.patel@example.com",
+      "role": "DevOps Engineer",
+      "l1Score": 60,
+      "status": "Rejected"
+    },
+    {
+      "id": 6,
+      "name": "Kavya Nair",
+      "email": "kavya.nair@example.com",
+      "role": "UI/UX Designer",
+      "l1Score": 75,
+      "status": "Accepted"
+    },
+    {
+      "id": 7,
+      "name": "Rohit Verma",
+      "email": "rohit.verma@example.com",
+      "role": "Data Analyst",
+      "l1Score": 68,
+      "status": "In Review"
+    },
+    {
+      "id": 8,
+      "name": "Meghana Iyer",
+      "email": "meghana.iyer@example.com",
+      "role": "System Analyst",
+      "l1Score": 55,
+      "status": "Rejected"
+    },
+    {
+      "id": 9,
+      "name": "Arjun Reddy",
+      "email": "arjun.reddy@example.com",
+      "role": "Software Engineer",
+      "l1Score": 88,
+      "status": "Accepted"
+    },
+    {
+      "id": 10,
+      "name": "Deepa Krishnan",
+      "email": "deepa.krishnan@example.com",
+      "role": "Product Manager",
+      "l1Score": 72,
+      "status": "In Review"
+    },
+    {
+      "id": 11,
+      "name": "Kiran Rao",
+      "email": "kiran.rao@example.com",
+      "role": "Technical Lead",
+      "l1Score": 91,
+      "status": "Accepted"
+    },
+    {
+      "id": 12,
+      "name": "Ananya Gupta",
+      "email": "ananya.gupta@example.com",
+      "role": "Data Scientist",
+      "l1Score": 58,
+      "status": "Rejected"
+    },
+    {
+      "id": 13,
+      "name": "Suresh Kumar",
+      "email": "suresh.kumar@example.com",
+      "role": "Full Stack Developer",
+      "l1Score": 76,
+      "status": "Accepted"
+    },
+    {
+      "id": 14,
+      "name": "Pooja Mehta",
+      "email": "pooja.mehta@example.com",
+      "role": "QA Engineer",
+      "l1Score": 63,
+      "status": "In Review"
+    },
+    {
+      "id": 15,
+      "name": "Aditya Sharma",
+      "email": "aditya.sharma@example.com",
+      "role": "Backend Developer",
+      "l1Score": 84,
+      "status": "Accepted"
+    },
+    {
+      "id": 16,
+      "name": "Neha Joshi",
+      "email": "neha.joshi@example.com",
+      "role": "Frontend Developer",
+      "l1Score": 69,
+      "status": "Rejected"
+    },
+    {
+      "id": 17,
+      "name": "Ravi Shankar",
+      "email": "ravi.shankar@example.com",
+      "role": "DevOps Engineer",
+      "l1Score": 77,
+      "status": "Accepted"
+    },
+    {
+      "id": 18,
+      "name": "Divya Nair",
+      "email": "divya.nair@example.com",
+      "role": "Software Engineer",
+      "l1Score": 61,
+      "status": "Rejected"
+    },
+    {
+      "id": 19,
+      "name": "Manoj Tiwari",
+      "email": "manoj.tiwari@example.com",
+      "role": "Technical Lead",
+      "l1Score": 86,
+      "status": "Accepted"
+    },
+    {
+      "id": 20,
+      "name": "Sunita Patel",
+      "email": "sunita.patel@example.com",
+      "role": "Data Analyst",
+      "l1Score": 73,
+      "status": "In Review"
+    },
+    {
+      "id": 21,
+      "name": "Vinod Kumar",
+      "email": "vinod.kumar@example.com",
+      "role": "Full Stack Developer",
+      "l1Score": 79,
+      "status": "Accepted"
+    },
+    {
+      "id": 22,
+      "name": "Rekha Singh",
+      "email": "rekha.singh@example.com",
+      "role": "QA Engineer",
+      "l1Score": 54,
+      "status": "Rejected"
+    },
+    {
+      "id": 23,
+      "name": "Sanjay Verma",
+      "email": "sanjay.verma@example.com",
+      "role": "Backend Developer",
+      "l1Score": 83,
+      "status": "Accepted"
+    },
+    {
+      "id": 24,
+      "name": "Pritha Banerjee",
+      "email": "pritha.banerjee@example.com",
+      "role": "Product Manager",
+      "l1Score": 67,
+      "status": "In Review"
+    },
+    {
+      "id": 25,
+      "name": "Rajesh Nair",
+      "email": "rajesh.nair@example.com",
+      "role": "Software Engineer",
+      "l1Score": 71,
+      "status": "In Review"
+    },
+    {
+      "id": 26,
+      "name": "Sheetal Gupta",
+      "email": "sheetal.gupta@example.com",
+      "role": "UI/UX Designer",
+      "l1Score": 80,
+      "status": "Accepted"
+    },
+    {
+      "id": 27,
+      "name": "Tarun Yadav",
+      "email": "tarun.yadav@example.com",
+      "role": "Data Scientist",
+      "l1Score": 57,
+      "status": "Rejected"
+    },
+    {
+      "id": 28,
+      "name": "Usha Krishnan",
+      "email": "usha.krishnan@example.com",
+      "role": "System Analyst",
+      "l1Score": 74,
+      "status": "Accepted"
+    },
+    {
+      "id": 29,
+      "name": "Ajay Mehta",
+      "email": "ajay.mehta@example.com",
+      "role": "DevOps Engineer",
+      "l1Score": 66,
+      "status": "In Review"
+    },
+    {
+      "id": 30,
+      "name": "Bhavna Reddy",
+      "email": "bhavna.reddy@example.com",
+      "role": "Software Engineer",
+      "l1Score": 90,
+      "status": "Accepted"
+    }
+  ]
+}

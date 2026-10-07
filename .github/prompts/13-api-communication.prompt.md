@@ -1,0 +1,23 @@
+ - Use TypeScript with strong typing for all requests, responses, and errors.
+ - Use `src/api/types.ts` should define shared types/interfaces.
+ - Use `axios` for HTTP requests.
+ - Implement retry logic with exponential backoff for transient errors (e.g., network issues, 5xx responses).
+ - Use interceptors to attach auth tokens and handle global errors.
+ - Use promise-based async/await syntax.
+ - use `src/api/apiClient.ts` to configure the axios instance with base URL, headers, and interceptors.
+ - create reusable functions for common API operations (GET, POST, PUT, DELETE).
+ - use `src/api/services/` folder for endpoint-specific API service files.
+ - use `{method}Service.ts` naming convention (e.g., `userService.ts`, `productService.ts`).
+ - Keep API logic separated from components — in `src/api` folder.
+ - Create `request`, `response`, and `error` builders/utilities.
+ - Create `{method}Request` types/interfaces in `{method}RequestHandler.ts` for each module.
+ - Create `{method}Response` types/interfaces in `{method}ResponseHandler.ts` for each module.
+ - Create or use existing module files to add new methods.
+ - Each service file should export functions for each API endpoint (e.g., `getUser`, `createProduct`).
+ - `Request Builder`: builds standardized API request object (url, method, headers, body).
+ - `Response Builder`: normalizes response to { success, data, message, error }.
+ - `Error Handler`: catches exceptions and returns a safe structured object.
+ - Each API service should wrap `axios` calls in a `try...catch` block.
+ - React components must manage `loading` and `error` states gracefully.
+ - Use `.env` for API base URLs and Authorization tokens.
+ - Reuse a common `ApiResponse<T>` type for all endpoints.
