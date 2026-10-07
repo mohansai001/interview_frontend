@@ -429,4 +429,3 @@ export default function App({ page = 'dashboard' }) {
     </div>
   )
 }
-<h1>Interview Management System</h1>
