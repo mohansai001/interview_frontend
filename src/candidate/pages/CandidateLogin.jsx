@@ -7,21 +7,38 @@ export default function CandidateLogin() {
   const { saveCandidate } = useCandidateContext()
   const [candidateId, setCandidateId] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!candidateId.trim()) {
       setError('Please enter your Candidate ID.')
       return
     }
-    // Mock lookup — replace with real API call
-    saveCandidate({
-      candidateId: candidateId.trim().toUpperCase(),
-      name: 'Rahul Kumar',
-      role: 'Software Engineer',
-      interviewId: 'INT-2024-05-24-001',
-    })
-    navigate('/candidate/system-check')
+    setLoading(true)
+    setError('')
+    try {
+      const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+      const res = await fetch(`${base}/interview/start-interview/${candidateId.trim()}`, { method: 'POST' })
+      if (!res.ok) throw new Error('Invalid Candidate ID or interview not found.')
+      const json = await res.json()
+      const data = json?.data ?? json
+      saveCandidate({
+        candidateId: candidateId.trim(),
+        name: data.candidate_name,
+        role: data.role,
+        interviewId: data.interview_id,
+        email: data.candidate_email,
+        level: data.level,
+        tsc: data.tsc,
+        jdName: data.jd_name,
+      })
+      navigate('/candidate/system-check')
+    } catch (err) {
+      setError(err.message || 'Login failed. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -64,8 +81,8 @@ export default function CandidateLogin() {
               {error && <p id="cid-error" className="c-field-error" role="alert">{error}</p>}
             </div>
 
-            <button type="submit" className="c-btn c-btn--primary c-btn--full">
-              Continue →
+            <button type="submit" className="c-btn c-btn--primary c-btn--full" disabled={loading}>
+              {loading ? 'Verifying...' : 'Continue →'}
             </button>
           </form>
 

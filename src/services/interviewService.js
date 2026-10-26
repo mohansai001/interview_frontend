@@ -50,19 +50,18 @@ export async function getJdOptions() {
 
   return entries
     .map((item) => {
-      if (typeof item === "string") return item;
-      if (typeof item?.file_name === "string") return item.file_name;
-      if (typeof item?.name === "string") return item.name;
-      if (typeof item?.filename === "string") return item.filename;
-      if (typeof item?.jd_name === "string") return item.jd_name;
-      return "";
+      if (typeof item === "string") return { name: item, url: "" };
+      const name =
+        item?.file_name ?? item?.name ?? item?.filename ?? item?.jd_name ?? "";
+      const url =
+        item?.url ?? item?.file_url ?? item?.jd_url ?? item?.blob_url ?? "";
+      return typeof name === "string" && name ? { name, url } : null;
     })
     .filter(Boolean)
-    .filter(
-      (name) =>
-        name.toLowerCase().endsWith(".docx") ||
-        name.toLowerCase().endsWith(".pdf") ||
-        name.toLowerCase().endsWith(".txt"),
+    .filter(({ name }) =>
+      name.toLowerCase().endsWith(".docx") ||
+      name.toLowerCase().endsWith(".pdf") ||
+      name.toLowerCase().endsWith(".txt"),
     );
 }
 
@@ -97,6 +96,7 @@ export async function generateInterviewLink(payload) {
   formData.append("l2_email", payload.l2_email ?? "");
   formData.append("level", payload.level ?? "");
   formData.append("jd_name", payload.jd_name ?? "");
+  formData.append("jd_url", payload.jd_url ?? "");
   formData.append("role", payload.role ?? "");
   formData.append("tsc", payload.tsc ?? "");
 

@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types'
 
-export default function CandidateHeader({ title, onHelp }) {
+export default function CandidateHeader({ title, onHelp = () => {} }) {
   return (
     <header className="c-header">
       <div className="c-header__brand">
@@ -25,8 +25,4 @@ export default function CandidateHeader({ title, onHelp }) {
 CandidateHeader.propTypes = {
   title: PropTypes.string.isRequired,
   onHelp: PropTypes.func,
-}
-
-CandidateHeader.defaultProps = {
-  onHelp: () => {},
 }

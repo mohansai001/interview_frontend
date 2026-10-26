@@ -6,11 +6,13 @@ import CandidateProvider from './candidate/CandidateApp.jsx'
 import CandidateLogin from './candidate/pages/CandidateLogin.jsx'
 import SystemCheck from './candidate/pages/SystemCheck.jsx'
 import ConsentPage from './candidate/pages/ConsentPage.jsx'
+import CalibrationPage from './candidate/pages/CalibrationPage.jsx'
 import InterviewRoom from './candidate/pages/InterviewRoom.jsx'
 import TagLogin from './components/auth/TagLogin.jsx'
 import './styles/index.css'
 import './index.css'
 import './candidate/candidate.css'
+import './candidate/calibration.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -34,6 +36,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/candidate/login"         element={<CandidateLogin />} />
           <Route path="/candidate/system-check"  element={<SystemCheck />} />
           <Route path="/candidate/consent"       element={<ConsentPage />} />
+          <Route path="/candidate/calibration"   element={<CalibrationPage />} />
           <Route path="/candidate/interview"     element={<InterviewRoom />} />
         </Route>
 

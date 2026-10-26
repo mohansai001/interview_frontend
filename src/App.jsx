@@ -17,6 +17,7 @@ const INITIAL_FORM_DATA = {
   role: '',
   tsc: '',
   jd: '',
+  jdUrl: '',
   level: '',
   panelname: '',
   panelemail: '',
@@ -42,7 +43,7 @@ export default function App({ page = 'dashboard' }) {
   const [resumeFile, setResumeFile] = useState(null)
   const [resumeError, setResumeError] = useState('')
   const [tscOptions, setTscOptions] = useState([])
-  const [jdOptions, setJdOptions] = useState([])
+  const [jdOptions, setJdOptions] = useState([]) // [{ name, url }]
   const [isLoadingTsc, setIsLoadingTsc] = useState(true)
   const [isLoadingJd, setIsLoadingJd] = useState(true)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -75,7 +76,7 @@ export default function App({ page = 'dashboard' }) {
     async function loadJdOptions() {
       try {
         const options = await getJdOptions()
-        if (mounted) setJdOptions(options.length > 0 ? options : DEFAULT_JD_OPTIONS)
+        if (mounted) setJdOptions(options.length > 0 ? options : DEFAULT_JD_OPTIONS.map((n) => ({ name: n, url: '' })))
       } catch {
         if (mounted) setJdOptions(DEFAULT_JD_OPTIONS)
       } finally {
@@ -143,6 +144,7 @@ export default function App({ page = 'dashboard' }) {
         l2_email: formData.panelemail.trim(),
         level: formData.level.trim(),
         jd_name: formData.jd.trim(),
+        jd_url: formData.jdUrl ?? '',
         role: formData.role.trim(),
         tsc: formData.tsc.trim(),
         file: resumeFile,
@@ -370,9 +372,14 @@ export default function App({ page = 'dashboard' }) {
                     name="jd"
                     label="JD"
                     value={formData.jd}
-                    onChange={handleFieldChange}
+                    onChange={(e) => {
+                      const selected = jdOptions.find((o) => o.name === e.target.value)
+                      setFormData((prev) => ({ ...prev, jd: e.target.value, jdUrl: selected?.url ?? '' }))
+                      setGeneralError('')
+                      if (formErrors.jd) setFormErrors((prev) => ({ ...prev, jd: '' }))
+                    }}
                     onBlur={handleFieldBlur}
-                    options={jdOptions}
+                    options={jdOptions.map((o) => o.name)}
                     placeholder={isLoadingJd ? 'Loading JD options...' : 'Select JD'}
                     required
                     searchable
