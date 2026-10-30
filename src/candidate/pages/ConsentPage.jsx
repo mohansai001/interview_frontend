@@ -69,9 +69,11 @@ export default function ConsentPage() {
   }
 
   const handleNext = () => {
-    if (photo) saveCandidate({ ...candidate, photo })
+    const interviewId = candidate?.interviewId ?? candidate?.interview_id ?? ''
+    const nextCandidate = photo ? { ...candidate, photo } : candidate
+    if (nextCandidate) saveCandidate(nextCandidate)
     navigate('/candidate/calibration', {
-      state: { sessionId: candidate?.interviewId || 'demo-session' },
+      state: { interviewId },
     })
   }
 

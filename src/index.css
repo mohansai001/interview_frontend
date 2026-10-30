@@ -50,6 +50,116 @@ body.dark {
 
 a { color: var(--primary); }
 
+.interview-id-link {
+  color: var(--brand-light);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 600;
+}
+
+.interview-id-link:hover,
+.interview-id-link:focus-visible {
+  color: var(--brand);
+}
+
+.feedback-btn {
+  background: var(--brand-light);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.feedback-btn:hover,
+.feedback-btn:focus-visible {
+  background: var(--brand);
+}
+
+.feedback-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.52);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.feedback-modal {
+  width: min(900px, 100%);
+  max-height: 85vh;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.22);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.feedback-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.feedback-modal__eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.feedback-modal__header h3 {
+  font-size: 1.3rem;
+  color: var(--text);
+}
+
+.feedback-modal__close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: #eef2ff;
+  color: var(--text);
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.feedback-modal__content {
+  padding: 20px 24px 24px;
+  color: var(--text);
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-y: auto;
+  max-height: 65vh;
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 transparent;
+}
+
+.feedback-modal__content::-webkit-scrollbar {
+  width: 10px;
+}
+
+.feedback-modal__content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.feedback-modal__content::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 999px;
+}
+
 .app-shell {
   height: 100vh;
   display: flex;
@@ -88,6 +198,24 @@ a { color: var(--primary); }
   display: flex;
   align-items: center;
   gap: 14px;
+}
+
+.app-header__brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  min-width: 110px;
+  padding: 4px 8px;
+  border-radius: 10px;
+  background: rgba(59, 130, 246, 0.04);
+}
+
+.app-header__brand-logo {
+  height: 22px;
+  width: auto;
+  object-fit: contain;
+  display: block;
 }
 
 .header-toggle-btn {

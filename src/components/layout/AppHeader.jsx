@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types'
+import valueMomentumLogo from '../../assets/ValueMomentum_logo.png'
 
 function HamburgerIcon() {
   return (
@@ -53,6 +54,11 @@ export default function AppHeader({
         <button type="button" className="header-toggle-btn" onClick={onToggleSidebar} aria-label="Toggle navigation">
           <HamburgerIcon />
         </button>
+
+        <div className="app-header__brand" aria-label="ValueMomentum brand">
+          <img src={valueMomentumLogo} alt="ValueMomentum logo" className="app-header__brand-logo" />
+        </div>
+
         <span className="app-header__page-title">{pageTitle}</span>
       </div>
 

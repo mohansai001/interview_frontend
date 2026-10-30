@@ -18,16 +18,17 @@ export default function ResumeUploadField({
   const handleInputChange = (event) => {
     const [selectedFile] = event.target.files || []
     onFileSelected(selectedFile || null)
+    event.target.value = ''
   }
 
   const handleDrop = (event) => {
     event.preventDefault()
     event.stopPropagation()
     setIsDragging(false)
-
     if (disabled) return
     const [selectedFile] = event.dataTransfer.files || []
     onFileSelected(selectedFile || null)
+    if (inputRef.current) inputRef.current.value = ''
   }
 
   const openFileDialog = () => {

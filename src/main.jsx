@@ -27,9 +27,9 @@ createRoot(document.getElementById('root')).render(
         <Route path="/dashboard"   element={<App page="dashboard" />} />
         <Route path="/generate"    element={<App page="generate" />} />
         <Route path="/interviews"  element={<App page="interviews" />} />
-        <Route path="/candidates"  element={<App page="candidates" />} />
-        <Route path="/reports"     element={<App page="reports" />} />
-        <Route path="/settings"    element={<App page="settings" />} />
+        <Route path="/candidates" element={<App page="candidates" />} />
+        <Route path="/reports"    element={<App page="reports" />} />
+        <Route path="/settings"   element={<App page="settings" />} />
 
         {/* ── Candidate routes (shared CandidateProvider context) ── */}
         <Route element={<CandidateProvider />}>

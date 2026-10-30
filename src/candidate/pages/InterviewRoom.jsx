@@ -33,8 +33,8 @@ export default function InterviewRoom() {
   const { candidate, clearCandidate } = useCandidateContext()
 
   const [questions, setQuestions] = useState([])
-  const [candidateDetails, setCandidateDetails] = useState(null)
   const [showInstructions, setShowInstructions] = useState(true)
+  const [interviewDone, setInterviewDone] = useState(false)
   const [currentQ, setCurrentQ] = useState(0)
   const [answering, setAnswering] = useState(false)
   const [answered, setAnswered] = useState(new Set())
@@ -55,21 +55,11 @@ export default function InterviewRoom() {
   const faceFrameTimerRef = useRef(null)
   const currentQRef = useRef(currentQ)
 
-  // Fetch candidate details
-  useEffect(() => {
-    const id = candidate?.interviewId || candidate?.candidateId
-    if (!id) return
-    fetch(`${env.apiBaseUrl.replace(/\/$/, '')}/interview/get-interview-details/${id}`)
-      .then((r) => r.json())
-      .then((json) => setCandidateDetails(json?.data ?? json))
-      .catch(() => {})
-  }, [candidate?.interviewId, candidate?.candidateId])
+  const interviewId = candidate?.interviewId || candidate?.candidateId
 
-  // Fetch questions
   useEffect(() => {
-    const id = candidate?.interviewId || candidate?.candidateId
-    if (!id) return
-    fetch(`${env.apiBaseUrl.replace(/\/$/, '')}/interview/get_questions/${id}`, { method: 'POST' })
+    if (!interviewId) return
+    fetch(`${env.apiBaseUrl.replace(/\/$/, '')}/interview/get_questions/${interviewId}`, { method: 'POST' })
       .then((r) => r.json())
       .then((json) => {
         const entry = json?.questions?.find((q) => q.key === 'questions')
@@ -78,19 +68,15 @@ export default function InterviewRoom() {
         setQuestions(parsed.questions ?? [])
       })
       .catch(() => {})
-  }, [candidate?.interviewId, candidate?.candidateId])
+  }, [interviewId])
 
-  // Keep ref in sync so WS callbacks always have latest question index
   useEffect(() => { currentQRef.current = currentQ }, [currentQ])
 
-  // ── Append incoming transcript text ──────────────────────────────────────
   const appendTranscript = useCallback((text) => {
     if (!text || !String(text).trim()) return
-    const normalized = String(text).trim()
-    setLiveTranscript((prev) => prev ? `${prev} ${normalized}` : normalized)
+    setLiveTranscript((prev) => prev ? `${prev} ${String(text).trim()}` : String(text).trim())
   }, [])
 
-  // Sync liveTranscript → questionTranscripts while answering
   useEffect(() => {
     if (!answering || !liveTranscript) return
     const qId = questions[currentQRef.current]?.question_number
@@ -98,78 +84,43 @@ export default function InterviewRoom() {
     setQuestionTranscripts((prev) => ({ ...prev, [qId]: liveTranscript }))
   }, [liveTranscript, answering, questions])
 
-  // ── Stop all capture ──────────────────────────────────────────────────────
   const stopAnswerCapture = useCallback(() => {
     audioStreamRef.current?.getTracks().forEach((t) => t.stop())
     audioStreamRef.current = null
-
-    if (recorderRef.current) {
-      try { recorderRef.current.stop() } catch { /* ignore */ }
-    }
+    if (recorderRef.current) { try { recorderRef.current.stop() } catch { /* ignore */ } }
     recorderRef.current = null
-
     transcriptWsRef.current?.close()
     transcriptWsRef.current = null
     setTranscriptConnected(false)
-
-    if (faceFrameTimerRef.current) {
-      clearInterval(faceFrameTimerRef.current)
-      faceFrameTimerRef.current = null
-    }
+    if (faceFrameTimerRef.current) { clearInterval(faceFrameTimerRef.current); faceFrameTimerRef.current = null }
     faceWsRef.current?.close()
     faceWsRef.current = null
     setFaceConnected(false)
     setFaceStatus('Face detection idle')
   }, [])
 
-  // Parse transcript payloads returned by Azure Speech / backend WebSocket.
-  const extractTranscriptText = useCallback((payload) => {
-    if (!payload) return ''
-    const raw = typeof payload === 'string' ? payload.trim() : ''
-    if (!raw) return ''
-
-    try {
-      const msg = JSON.parse(raw)
-      const value = msg?.transcript ?? msg?.text ?? msg?.message ?? msg?.value ?? msg?.final ?? msg?.partial ?? msg?.data
-      if (typeof value === 'string' && value.trim()) return value.trim()
-      if (typeof value === 'object' && value !== null) {
-        const nested = value.transcript ?? value.text ?? value.message ?? value.value
-        if (typeof nested === 'string' && nested.trim()) return nested.trim()
-      }
-    } catch {
-      // Raw text, keep as-is.
-    }
-
-    return raw
-  }, [])
-
-  // ── Start capture when answering ─────────────────────────────────────────
   const startAnswerCapture = useCallback(async () => {
     if (!navigator.mediaDevices?.getUserMedia) return
-
     try {
       const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true })
       audioStreamRef.current = audioStream
 
-      const sessionId = candidate?.interviewId || 'candidate-session'
+      const sessionId = candidate?.interviewId || candidate?.interview_id || candidate?.candidateId || 'candidate-session'
       const tWs = new WebSocket(`${env.wsBaseUrl.replace(/\/$/, '')}/transcript/ws/azure-transcript/?session_id=${sessionId}`)
       transcriptWsRef.current = tWs
-
       tWs.onopen = () => setTranscriptConnected(true)
       tWs.onclose = () => setTranscriptConnected(false)
       tWs.onerror = () => setTranscriptConnected(false)
       tWs.onmessage = (event) => {
-        const raw = event.data
-        if (typeof raw === 'string') {
+        if (typeof event.data === 'string') {
           try {
-            const msg = JSON.parse(raw)
-            const text = msg?.transcript
-            if (text && text.trim()) appendTranscript(text.trim())
+            const msg = JSON.parse(event.data)
+            if (msg?.transcript?.trim()) appendTranscript(msg.transcript.trim())
           } catch { /* ignore */ }
         }
       }
 
-      const fWs = new WebSocket(`${env.wsBaseUrl.replace(/\/$/, '')}/face/ws/interview`)
+      const fWs = new WebSocket(`${env.wsBaseUrl.replace(/\/$/, '')}/face/ws/interview?interview_id=${sessionId}`)
       faceWsRef.current = fWs
       fWs.onopen = () => setFaceConnected(true)
       fWs.onclose = () => setFaceConnected(false)
@@ -177,49 +128,32 @@ export default function InterviewRoom() {
       fWs.onmessage = (e) => {
         try {
           const msg = JSON.parse(e.data)
-          if (msg?.face_count !== undefined || msg?.gaze_direction) {
-            setFaceStatus(`Face: ${msg.face_count ?? 0} • Gaze: ${msg.gaze_direction || 'unknown'}`)
-          }
+          if (msg?.face_count !== undefined) setFaceStatus(`Face: ${msg.face_count} • Gaze: ${msg.gaze ?? 'unknown'}`)
         } catch { /* ignore */ }
       }
 
-      // 16kHz AudioContext — required for Azure Speech
       const audioContext = new AudioContext({ sampleRate: 16000 })
       const source = audioContext.createMediaStreamSource(audioStream)
-
-      const CHUNK_SIZE = 16000 * 3 // 3 seconds of float32 samples
+      const CHUNK_SIZE = 16000 * 3
       let buffer = []
-
-      const workletCode = `
+      const workletUrl = URL.createObjectURL(new Blob([`
         class PCMProcessor extends AudioWorkletProcessor {
           process(inputs) {
             const input = inputs[0]
-            if (input && input.length && input[0].length) {
-              this.port.postMessage(input[0])
-            }
+            if (input && input.length && input[0].length) this.port.postMessage(input[0])
             return true
           }
         }
         registerProcessor('pcm-processor', PCMProcessor)
-      `
-      const workletBlob = new Blob([workletCode], { type: 'application/javascript' })
-      const workletUrl = URL.createObjectURL(workletBlob)
-      try {
-        await audioContext.audioWorklet.addModule(workletUrl)
-      } finally {
-        URL.revokeObjectURL(workletUrl)
-      }
+      `], { type: 'application/javascript' }))
+      try { await audioContext.audioWorklet.addModule(workletUrl) } finally { URL.revokeObjectURL(workletUrl) }
 
       const workletNode = new AudioWorkletNode(audioContext, 'pcm-processor')
       workletNode.port.onmessage = (event) => {
         if (tWs.readyState !== WebSocket.OPEN) return
         buffer.push(...event.data)
-        if (buffer.length >= CHUNK_SIZE) {
-          const chunk = new Float32Array(buffer.splice(0, CHUNK_SIZE))
-          tWs.send(chunk.buffer)
-        }
+        if (buffer.length >= CHUNK_SIZE) tWs.send(new Float32Array(buffer.splice(0, CHUNK_SIZE)).buffer)
       }
-
       source.connect(workletNode)
       workletNode.connect(audioContext.destination)
       recorderRef.current = {
@@ -239,30 +173,20 @@ export default function InterviewRoom() {
         canvas.width = video.videoWidth || 640
         canvas.height = video.videoHeight || 360
         canvas.getContext('2d')?.drawImage(video, 0, 0, canvas.width, canvas.height)
-        canvas.toBlob((blob) => {
-          if (blob && fWs.readyState === WebSocket.OPEN) fWs.send(blob)
-        }, 'image/jpeg', 0.75)
+        canvas.toBlob((blob) => { if (blob && fWs.readyState === WebSocket.OPEN) fWs.send(blob) }, 'image/jpeg', 0.75)
       }, 1000)
-
     } catch (err) {
       console.error('[startAnswerCapture] Failed:', err)
       setFaceStatus('Microphone access denied.')
       setTranscriptConnected(false)
     }
-  }, [appendTranscript, candidate?.interviewId, extractTranscriptText])
+  }, [appendTranscript, candidate?.interviewId, candidate?.interview_id, candidate?.candidateId])
 
-  // Start/stop capture based on answering state
   useEffect(() => {
-    if (answering) {
-      setLiveTranscript('')
-      startAnswerCapture()
-    } else {
-      stopAnswerCapture()
-    }
+    if (answering) { setLiveTranscript(''); startAnswerCapture() } else { stopAnswerCapture() }
     return () => stopAnswerCapture()
   }, [answering]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Fullscreen helpers
   const enterFullscreen = useCallback(() => {
     const el = document.documentElement
     if (el.requestFullscreen) el.requestFullscreen()
@@ -279,10 +203,8 @@ export default function InterviewRoom() {
   useEffect(() => {
     if (showInstructions) return
     const handler = () => {
-      const isFs = document.fullscreenElement || document.webkitFullscreenElement
-      if (!isFs) {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
         setFsWarning(true)
-        // Must be triggered by user gesture — show warning only, don't auto re-enter
         setTimeout(() => setFsWarning(false), 3000)
       }
     }
@@ -294,14 +216,12 @@ export default function InterviewRoom() {
     }
   }, [showInstructions])
 
-  // Countdown
   useEffect(() => {
     if (showInstructions) return
     const id = setInterval(() => setTimeLeft((t) => Math.max(0, t - 1)), 1000)
     return () => clearInterval(id)
   }, [showInstructions])
 
-  // Camera feed
   useEffect(() => {
     if (showInstructions || !videoRef.current) return
     let stream
@@ -313,17 +233,26 @@ export default function InterviewRoom() {
 
   const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
 
+  const submitTranscription = useCallback((questionText, transcriptText) => {
+    if (!transcriptText?.trim() || !questionText?.trim() || !interviewId) return
+    const url = `${env.apiBaseUrl.replace(/\/$/, '')}/interview/append_transcription/${interviewId}/?question=${encodeURIComponent(questionText)}&transcription=${encodeURIComponent(transcriptText)}`
+    fetch(url, { method: 'POST' }).catch(() => {})
+  }, [interviewId])
+
   const handleEndAnswer = () => {
-    const qId = questions[currentQ]?.question_number
-    if (qId && liveTranscript) {
-      setQuestionTranscripts((prev) => ({ ...prev, [qId]: liveTranscript }))
+    const q = questions[currentQ]
+    if (q?.question_number && liveTranscript) {
+      setQuestionTranscripts((prev) => ({ ...prev, [q.question_number]: liveTranscript }))
     }
+    submitTranscription(q?.question, liveTranscript)
     setAnswered((prev) => new Set([...prev, currentQ]))
     setAnswering(false)
   }
 
   const handleQuestionChange = (nextIndex) => {
     if (nextIndex < 0 || nextIndex >= questions.length) return
+    const q = questions[currentQ]
+    submitTranscription(q?.question, questionTranscripts[q?.question_number] || liveTranscript)
     setAnswering(false)
     setCurrentQ(nextIndex)
     setLiveTranscript(questionTranscripts[questions[nextIndex]?.question_number] || '')
@@ -333,7 +262,30 @@ export default function InterviewRoom() {
     stopAnswerCapture()
     exitFullscreen()
     clearCandidate()
-    navigate('/candidate/login')
+    setInterviewDone(true)
+    if (interviewId) {
+      fetch(`${env.apiBaseUrl.replace(/\/$/, '')}/interview/end_interview/${interviewId}`, { method: 'POST' }).catch(() => {})
+    }
+  }
+
+  // ── Completion screen ─────────────────────────────────────────────────────
+  if (interviewDone) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24, background: '#f8fafc', padding: 24 }}>
+        <div style={{ width: 72, height: 72, borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg viewBox="0 0 24 24" fill="#16a34a" width="36" height="36"><path d="M9 16.2l-3.5-3.5-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" /></svg>
+        </div>
+        <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: '#1e293b' }}>Interview Completed!</h2>
+        <p style={{ margin: 0, fontSize: 15, color: '#475569', textAlign: 'center', maxWidth: 400 }}>
+          Your interview has been successfully completed. Our team will review your responses shortly.
+        </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, padding: '14px 24px' }}>
+          <span style={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>Feedback Status</span>
+          <span style={{ background: '#fef9c3', color: '#854d0e', fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 20 }}>Pending</span>
+        </div>
+        <button type="button" className="c-btn c-btn--outline" onClick={() => navigate('/candidate/login')}>Back to Login</button>
+      </div>
+    )
   }
 
   const question = questions[currentQ]
@@ -353,7 +305,6 @@ export default function InterviewRoom() {
     )
   }
 
-  // ── Instructions overlay ──────────────────────────────────────────────────
   if (showInstructions) {
     return (
       <div className="c-room-shell" aria-label="Interview room">
@@ -376,7 +327,6 @@ export default function InterviewRoom() {
     )
   }
 
-  // ── Interview screen ──────────────────────────────────────────────────────
   return (
     <div className="c-interview" ref={roomRef}>
       {fsWarning && (
@@ -400,12 +350,12 @@ export default function InterviewRoom() {
 
       <div className="c-candidate-bar" aria-label="Candidate information">
         {[
-          { label: 'Interview ID', value: candidateDetails?.interview_id },
-          { label: 'Name',         value: candidateDetails?.candidate_name },
-          { label: 'Role',         value: candidateDetails?.role },
-          { label: 'Level',        value: candidateDetails?.level },
-          { label: 'TSC',          value: candidateDetails?.tsc },
-          { label: 'JD',           value: candidateDetails?.jd_name },
+          { label: 'Interview ID', value: candidate?.interviewId || candidate?.candidateId },
+          { label: 'Name',         value: candidate?.name },
+          { label: 'Role',         value: candidate?.role },
+          { label: 'Level',        value: candidate?.level },
+          { label: 'TSC',          value: candidate?.tsc },
+          { label: 'JD',           value: candidate?.jdName },
         ].map(({ label, value }) => (
           <div key={label} className="c-candidate-bar__item">
             <span className="c-candidate-bar__label">{label}</span>
@@ -419,17 +369,11 @@ export default function InterviewRoom() {
       </div>
 
       <div className="c-interview-body">
-        {/* Video */}
         <div className="c-video-panel">
           <p className="c-video-label">Your Video</p>
           <div className="c-video-feed" aria-label="Your camera feed">
-            <video
-              ref={videoRef}
-              autoPlay
-              muted
-              playsInline
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 1 }}
-            />
+            <video ref={videoRef} autoPlay muted playsInline
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 1 }} />
             <div className="c-video-placeholder" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
@@ -439,7 +383,6 @@ export default function InterviewRoom() {
           </div>
         </div>
 
-        {/* Questions + Transcript */}
         <div className="c-question-panel">
           <div className="c-question-panel-header">
             <h3>Questions</h3>

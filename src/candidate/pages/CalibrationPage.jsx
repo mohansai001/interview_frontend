@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { env } from '../../config/env'
+import { useCandidateContext } from '../CandidateApp'
 
 const POINTS = [
   { id: 'tl', label: 'Top Left',       x: 10, y: 10 },
@@ -14,10 +15,28 @@ const POINTS = [
   { id: 'br', label: 'Bottom Right',   x: 80, y: 80 },
 ]
 
+function resolveInterviewId(locationState, candidate) {
+  if (locationState?.interviewId) return locationState.interviewId
+  if (candidate?.interviewId) return candidate.interviewId
+  if (candidate?.interview_id) return candidate.interview_id
+  if (candidate?.candidateId) return candidate.candidateId
+  try {
+    const stored = JSON.parse(sessionStorage.getItem('candidate') || '{}')
+    return stored?.interviewId || stored?.interview_id || stored?.candidateId || ''
+  } catch {
+    return ''
+  }
+}
+
 export default function CalibrationPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const sessionId = location.state?.sessionId ?? 'default-session'
+  const { candidate } = useCandidateContext()
+  const interviewId = resolveInterviewId(location.state, candidate)
+
+  console.log('[CalibrationPage] location.state:', location.state)
+  console.log('[CalibrationPage] candidate:', candidate)
+  console.log('[CalibrationPage] interviewId resolved:', interviewId)
 
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
@@ -31,7 +50,6 @@ export default function CalibrationPage() {
 
   const allCaptured = captured.size === POINTS.length
 
-  // ── Start camera first, then open WS ─────────────────────────────────────
   useEffect(() => {
     let mounted = true
     navigator.mediaDevices
@@ -54,11 +72,15 @@ export default function CalibrationPage() {
     }
   }, [])
 
-  // ── Open WS only after camera is ready ───────────────────────────────────
   useEffect(() => {
     if (!cameraReady) return
+    if (!interviewId) {
+      setStatus('Error: interview ID missing. Please go back and login again.')
+      return
+    }
 
-    const wsUrl = `${env.wsBaseUrl}/face/ws/calibration?session_id=${sessionId}`
+    const wsUrl = `${env.wsBaseUrl}/face/ws/calibration?interview_id=${interviewId}`
+    console.log('[CalibrationPage] connecting WS:', wsUrl)
     const ws = new WebSocket(wsUrl)
     wsRef.current = ws
 
@@ -79,9 +101,8 @@ export default function CalibrationPage() {
     }
 
     return () => ws.close()
-  }, [cameraReady, sessionId])
+  }, [cameraReady, interviewId])
 
-  // ── Capture frame + send over WS ─────────────────────────────────────────
   const handleDotClick = useCallback((point) => {
     if (captured.has(point.id)) return
 
@@ -89,11 +110,9 @@ export default function CalibrationPage() {
     const canvas = canvasRef.current
     if (!video || !canvas) return
 
-    // Draw 640×360 frame
     canvas.width = 640
     canvas.height = 360
     const ctx = canvas.getContext('2d')
-    // Mirror to match display
     ctx.translate(640, 0)
     ctx.scale(-1, 1)
     ctx.drawImage(video, 0, 0, 640, 360)
@@ -105,28 +124,25 @@ export default function CalibrationPage() {
         return
       }
 
-      // Send JSON metadata first
       ws.send(JSON.stringify({
         type: 'calibration_point',
         point: point.id,
         label: point.label,
+        interview_id: interviewId,
       }))
 
-      // Then send the JPEG blob
       ws.send(blob)
 
       setCaptured((prev) => new Set([...prev, point.id]))
       setStatus(`${captured.size + 1} / ${POINTS.length} captured — keep looking at the dots.`)
     }, 'image/jpeg', 0.85)
-  }, [captured])
+  }, [captured, interviewId])
 
   return (
     <div className="gaze-shell" aria-label="Gaze calibration screen">
 
-      {/* Hidden canvas for frame capture */}
       <canvas ref={canvasRef} style={{ display: 'none' }} aria-hidden="true" />
 
-      {/* ── Back button ── */}
       <button
         type="button"
         className="gaze-back-btn"
@@ -136,7 +152,6 @@ export default function CalibrationPage() {
         ← Back
       </button>
 
-      {/* ── Status bar ── */}
       <div className="gaze-status-bar" role="status" aria-live="polite">
         <span className={`gaze-ws-dot ${wsConnected ? 'gaze-ws-dot--on' : 'gaze-ws-dot--off'}`} aria-hidden="true" />
         <span className="gaze-ws-label">{wsConnected ? 'Connected' : 'Disconnected'}</span>
@@ -148,7 +163,6 @@ export default function CalibrationPage() {
         </span>
       </div>
 
-      {/* ── 9 calibration dots ── */}
       {POINTS.map((point) => {
         const done = captured.has(point.id)
         return (
@@ -166,7 +180,6 @@ export default function CalibrationPage() {
         )
       })}
 
-      {/* ── PiP camera preview ── */}
       <div className="gaze-pip" aria-label="Camera preview">
         <video
           ref={videoRef}
@@ -177,7 +190,6 @@ export default function CalibrationPage() {
         />
       </div>
 
-      {/* ── Finish button ── */}
       {allCaptured && (
         <button
           type="button"

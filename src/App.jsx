@@ -34,7 +34,7 @@ const SIDEBAR_ITEMS = [
 
 export default function App({ page = 'dashboard' }) {
   const navigate = useNavigate()
-  const [userName] = useState('John Doe')
+  const [userName] = useState('Mohan')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [activePage, setActivePage] = useState(page)
   const [activeTab, setActiveTab] = useState('single')
@@ -122,10 +122,11 @@ export default function App({ page = 'dashboard' }) {
   }
 
   const handleResumeSelected = (file) => {
-    setResumeFile(file)
+    const err = validateResumeFile(file, env.maxResumeSizeBytes)
+    setResumeError(err)
+    setResumeFile(err ? null : file)
     setSuccessMessage('')
     setGeneralError('')
-    setResumeError(validateResumeFile(file, env.maxResumeSizeBytes))
   }
 
   const handleGenerate = async (event) => {
@@ -169,6 +170,9 @@ export default function App({ page = 'dashboard' }) {
     setResumeError('')
     setGeneralError('')
     setSuccessMessage('')
+    localStorage.removeItem('user_id')
+    sessionStorage.removeItem('candidate')
+    navigate('/tag/login', { replace: true })
   }
 
   return (

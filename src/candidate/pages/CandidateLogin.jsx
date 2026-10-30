@@ -12,7 +12,7 @@ export default function CandidateLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!candidateId.trim()) {
-      setError('Please enter your Candidate ID.')
+      setError('Please enter your Interview ID.')
       return
     }
     setLoading(true)
@@ -20,18 +20,21 @@ export default function CandidateLogin() {
     try {
       const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
       const res = await fetch(`${base}/interview/start-interview/${candidateId.trim()}`, { method: 'POST' })
-      if (!res.ok) throw new Error('Invalid Candidate ID or interview not found.')
-      const json = await res.json()
-      const data = json?.data ?? json
+      if (!res.ok) throw new Error('Invalid Interview ID or interview not found.')
+      const detailsRes = await fetch(`${base}/interview/get-interview-details/${candidateId.trim()}`)
+      const detailsJson = detailsRes.ok ? await detailsRes.json() : {}
+      const interview = detailsJson?.data?.interview ?? {}
+      const interviewId = interview?.interview_id ?? candidateId.trim()
       saveCandidate({
         candidateId: candidateId.trim(),
-        name: data.candidate_name,
-        role: data.role,
-        interviewId: data.interview_id,
-        email: data.candidate_email,
-        level: data.level,
-        tsc: data.tsc,
-        jdName: data.jd_name,
+        interviewId,
+        interview_id: interviewId,
+        name: interview.candidate_name,
+        email: interview.candidate_email,
+        role: interview.role,
+        level: interview.level,
+        tsc: interview.tsc,
+        jdName: interview.jd_name,
       })
       navigate('/candidate/system-check')
     } catch (err) {
@@ -52,25 +55,25 @@ export default function CandidateLogin() {
         </div>
         <p className="c-login__welcome">Welcome to</p>
         <h1 className="c-login__platform-name">Interview Platform</h1>
-        <p className="c-login__sub">Please login using your Candidate ID</p>
+        <p className="c-login__sub">Please login using your Interview ID</p>
       </div>
 
       {/* Right form panel */}
       <div className="c-login__right">
         <div className="c-login__form-wrap">
           <h2>Candidate Login</h2>
-          <p className="c-login__form-desc">Enter your Candidate ID to continue</p>
+          <p className="c-login__form-desc">Enter your Interview ID to continue</p>
 
           <form onSubmit={handleSubmit} noValidate>
             <div className="c-form-group">
               <label htmlFor="candidateId" className="c-form-label">
-                Candidate ID <span aria-hidden="true">*</span>
+                Interview ID <span aria-hidden="true">*</span>
               </label>
               <input
                 id="candidateId"
                 type="text"
                 className={`c-form-input${error ? ' is-error' : ''}`}
-                placeholder="Enter Candidate ID"
+                placeholder="Enter Interview ID"
                 value={candidateId}
                 onChange={(e) => { setCandidateId(e.target.value); setError('') }}
                 aria-required="true"
