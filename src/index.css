@@ -576,6 +576,7 @@ a { color: var(--primary); }
 }
 
 /* ── Bulk results ─────────────────────────────── */
+.email-chips-add { display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--primary); background: transparent; color: var(--primary); cursor: pointer; flex-shrink: 0; margin-left: 4px; transition: background 0.15s, color 0.15s; } .email-chips-add:hover { background: var(--primary); color: #fff; } .email-chips-add:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .bulk-results {
   display: flex;
   flex-direction: column;

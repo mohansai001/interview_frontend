@@ -246,17 +246,25 @@
 }
 
 .c-login__brand-icon {
-  width: 72px;
+  width: 120px;
   height: 72px;
-  background: #bfdbfe;
-  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 20px;
+  padding: 10px 12px;
 }
 
-.c-login__brand-icon svg { width: 36px; height: 36px; color: #1d4ed8; }
+.c-login__brand-logo {
+  width: 100%;
+  max-width: 96px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
 .c-login__welcome { margin: 0; font-size: 14px; color: #4b5563; }
 .c-login__platform-name { margin: 6px 0 10px; font-size: 26px; font-weight: 800; color: #1e3a8a; line-height: 1.2; }
 .c-login__sub { margin: 0; font-size: 13px; color: #6b7280; }
@@ -572,15 +580,15 @@
 }
 
 .c-selfie-preview {
-  width: 100%;
-  height: 220px;
+  width: 260px;
+  height: 260px;
   background: #f3f4f6;
   border-radius: 8px;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 10px;
+  margin: 0 auto 10px;
   position: relative;
 }
 
@@ -1162,3 +1170,15 @@
   .c-calibration-status { top: 70px; }
   .c-calibration-back { top: 90px; }
 }
+
+.c-code-editor { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.c-code-textarea {
+  width: 100%; min-height: 220px; resize: vertical;
+  font-family: 'Fira Mono', 'Consolas', 'Courier New', monospace;
+  font-size: 13px; line-height: 1.6;
+  background: #0f172a; color: #e2e8f0;
+  border: 1px solid #334155; border-radius: 8px;
+  padding: 14px 16px; box-sizing: border-box;
+  outline: none; tab-size: 2;
+}
+.c-code-textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,.2); }

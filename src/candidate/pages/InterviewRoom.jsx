@@ -54,6 +54,7 @@ export default function InterviewRoom() {
   const audioStreamRef = useRef(null)
   const faceFrameTimerRef = useRef(null)
   const currentQRef = useRef(currentQ)
+  const freshRecordingRef = useRef(false)
 
   const interviewId = candidate?.interviewId || candidate?.candidateId
 
@@ -74,11 +75,19 @@ export default function InterviewRoom() {
 
   const appendTranscript = useCallback((text) => {
     if (!text || !String(text).trim()) return
-    setLiveTranscript((prev) => prev ? `${prev} ${String(text).trim()}` : String(text).trim())
+    const normalized = String(text).trim()
+    setLiveTranscript((prev) => {
+      // if fresh recording, discard any stale prev and start clean
+      if (freshRecordingRef.current) {
+        freshRecordingRef.current = false
+        return normalized
+      }
+      return prev ? `${prev} ${normalized}` : normalized
+    })
   }, [])
 
   useEffect(() => {
-    if (!answering || !liveTranscript) return
+    if (!answering || !liveTranscript || freshRecordingRef.current) return
     const qId = questions[currentQRef.current]?.question_number
     if (!qId) return
     setQuestionTranscripts((prev) => ({ ...prev, [qId]: liveTranscript }))
@@ -92,12 +101,62 @@ export default function InterviewRoom() {
     transcriptWsRef.current?.close()
     transcriptWsRef.current = null
     setTranscriptConnected(false)
+  }, [])
+
+  const stopFaceDetection = useCallback(() => {
     if (faceFrameTimerRef.current) { clearInterval(faceFrameTimerRef.current); faceFrameTimerRef.current = null }
     faceWsRef.current?.close()
     faceWsRef.current = null
     setFaceConnected(false)
     setFaceStatus('Face detection idle')
   }, [])
+
+  // Start face detection when interview begins, stop on end
+  useEffect(() => {
+    if (showInstructions) return
+    const fWs = new WebSocket(`${env.wsBaseUrl.replace(/\/$/, '')}/face/ws/interview?interview_id=${interviewId}`)
+    faceWsRef.current = fWs
+    fWs.onopen = () => {
+      setFaceConnected(true)
+      setFaceStatus('Monitoring...')
+      const startFrames = () => {
+        if (fWs.readyState !== WebSocket.OPEN) return
+        const video = videoRef.current
+        console.log('[Face] startFrames — videoWidth:', video?.videoWidth, 'wsState:', fWs.readyState)
+        if (!video || !video.srcObject || video.videoWidth === 0) {
+          console.log('[Face] Video not ready, retrying in 500ms')
+          setTimeout(startFrames, 500)
+          return
+        }
+        console.log('[Face] Video ready, starting interval')
+        faceFrameTimerRef.current = setInterval(() => {
+          if (fWs.readyState !== WebSocket.OPEN) return
+          const v = videoRef.current
+          if (!v || v.videoWidth === 0) return
+          const canvas = document.createElement('canvas')
+          canvas.width = v.videoWidth
+          canvas.height = v.videoHeight
+          canvas.getContext('2d')?.drawImage(v, 0, 0, canvas.width, canvas.height)
+          canvas.toBlob((blob) => {
+            console.log('[Face] Sending blob:', blob?.size, 'bytes, wsState:', fWs.readyState)
+            if (blob && fWs.readyState === WebSocket.OPEN) fWs.send(blob)
+          }, 'image/jpeg', 0.75)
+        }, 1000)
+      }
+      setTimeout(startFrames, 1000)
+    }
+    fWs.onclose = (e) => { console.warn('[Face WS] Closed', e.code, e.reason); setFaceConnected(false); setFaceStatus('Face detection idle') }
+    fWs.onerror = (e) => { console.error('[Face WS] Error', e); setFaceConnected(false); setFaceStatus('Face detection idle') }
+    fWs.onmessage = (e) => {
+      try {
+        const msg = JSON.parse(e.data)
+        if (msg?.face_count !== undefined) {
+          setFaceStatus(`Face: ${msg.face_count} • Gaze: ${msg.gaze || 'unknown'}`)
+        }
+      } catch { /* ignore */ }
+    }
+    return () => stopFaceDetection()
+  }, [showInstructions]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const startAnswerCapture = useCallback(async () => {
     if (!navigator.mediaDevices?.getUserMedia) return
@@ -120,18 +179,7 @@ export default function InterviewRoom() {
         }
       }
 
-      const fWs = new WebSocket(`${env.wsBaseUrl.replace(/\/$/, '')}/face/ws/interview?interview_id=${sessionId}`)
-      faceWsRef.current = fWs
-      fWs.onopen = () => setFaceConnected(true)
-      fWs.onclose = () => setFaceConnected(false)
-      fWs.onerror = () => setFaceConnected(false)
-      fWs.onmessage = (e) => {
-        try {
-          const msg = JSON.parse(e.data)
-          if (msg?.face_count !== undefined) setFaceStatus(`Face: ${msg.face_count} • Gaze: ${msg.gaze ?? 'unknown'}`)
-        } catch { /* ignore */ }
-      }
-
+      // removed face WS from here — now handled separately
       const audioContext = new AudioContext({ sampleRate: 16000 })
       const source = audioContext.createMediaStreamSource(audioStream)
       const CHUNK_SIZE = 16000 * 3
@@ -165,16 +213,6 @@ export default function InterviewRoom() {
         },
         state: 'recording',
       }
-
-      faceFrameTimerRef.current = setInterval(() => {
-        const video = videoRef.current
-        if (!video || fWs.readyState !== WebSocket.OPEN) return
-        const canvas = document.createElement('canvas')
-        canvas.width = video.videoWidth || 640
-        canvas.height = video.videoHeight || 360
-        canvas.getContext('2d')?.drawImage(video, 0, 0, canvas.width, canvas.height)
-        canvas.toBlob((blob) => { if (blob && fWs.readyState === WebSocket.OPEN) fWs.send(blob) }, 'image/jpeg', 0.75)
-      }, 1000)
     } catch (err) {
       console.error('[startAnswerCapture] Failed:', err)
       setFaceStatus('Microphone access denied.')
@@ -182,8 +220,19 @@ export default function InterviewRoom() {
     }
   }, [appendTranscript, candidate?.interviewId, candidate?.interview_id, candidate?.candidateId])
 
+  const handleStartAnswer = () => {
+    const q = questions[currentQ]
+    freshRecordingRef.current = true
+    if (q?.question_number) {
+      setQuestionTranscripts((prev) => { const next = { ...prev }; delete next[q.question_number]; return next })
+    }
+    setLiveTranscript('')
+    setAnswered((prev) => { const next = new Set(prev); next.delete(currentQ); return next })
+    setAnswering(true)
+  }
+
   useEffect(() => {
-    if (answering) { setLiveTranscript(''); startAnswerCapture() } else { stopAnswerCapture() }
+    if (answering) { startAnswerCapture() } else { stopAnswerCapture() }
     return () => stopAnswerCapture()
   }, [answering]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -225,8 +274,12 @@ export default function InterviewRoom() {
   useEffect(() => {
     if (showInstructions || !videoRef.current) return
     let stream
+    const video = videoRef.current
     navigator.mediaDevices?.getUserMedia({ video: true, audio: false })
-      .then((s) => { stream = s; if (videoRef.current) videoRef.current.srcObject = s })
+      .then((s) => {
+        stream = s
+        if (videoRef.current) videoRef.current.srcObject = s
+      })
       .catch(() => {})
     return () => stream?.getTracks().forEach((t) => t.stop())
   }, [showInstructions])
@@ -244,7 +297,6 @@ export default function InterviewRoom() {
     if (q?.question_number && liveTranscript) {
       setQuestionTranscripts((prev) => ({ ...prev, [q.question_number]: liveTranscript }))
     }
-    submitTranscription(q?.question, liveTranscript)
     setAnswered((prev) => new Set([...prev, currentQ]))
     setAnswering(false)
   }
@@ -260,6 +312,7 @@ export default function InterviewRoom() {
 
   const handleEndInterview = () => {
     stopAnswerCapture()
+    stopFaceDetection()
     exitFullscreen()
     clearCandidate()
     setInterviewDone(true)
@@ -290,6 +343,7 @@ export default function InterviewRoom() {
 
   const question = questions[currentQ]
   const isAnswered = answered.has(currentQ)
+  const isCoding = question?.question_type?.toLowerCase() === 'coding'
   const displayTranscript = questionTranscripts[question?.question_number] || liveTranscript || ''
 
   if (!question && questions.length === 0) {
@@ -402,12 +456,11 @@ export default function InterviewRoom() {
             </div>
             <h4>{question?.question}</h4>
             <div className="c-question-card__actions">
-              {!isAnswered && (
-                answering
-                  ? <button type="button" className="c-end-btn" onClick={handleEndAnswer}>End Answer</button>
-                  : <button type="button" className="c-start-btn" onClick={() => setAnswering(true)}>Start Answer</button>
+              {!isCoding && (answering
+                ? <button type="button" className="c-end-btn" onClick={handleEndAnswer}>End Answer</button>
+                : <button type="button" className="c-start-btn" onClick={handleStartAnswer}>Start Answer</button>
               )}
-              {isAnswered && (
+              {isAnswered && !answering && (
                 <span className="c-answered-badge" role="status">
                   <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true">
                     <path d="M9 16.2l-3.5-3.5-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" />
@@ -422,24 +475,47 @@ export default function InterviewRoom() {
             </div>
           </div>
 
-          <div className="c-transcript" aria-live="polite" aria-label="Speech transcript">
-            <div className="c-transcript__header">
-              <h4>Transcript</h4>
-              <span className={`c-transcript__status ${transcriptConnected ? 'is-live' : ''}`}>
-                {transcriptConnected ? '● Live' : '○ Idle'}
-              </span>
+          {isCoding ? (
+            <div className="c-code-editor" aria-label="Code editor">
+              <div className="c-transcript__header">
+                <h4>Code Editor</h4>
+                <span className="c-badge c-badge--blue">Coding</span>
+              </div>
+              <textarea
+                className="c-code-textarea"
+                value={questionTranscripts[question?.question_number] || ''}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setQuestionTranscripts((prev) => ({ ...prev, [question.question_number]: val }))
+                  setAnswered((prev) => val.trim() ? new Set([...prev, currentQ]) : (() => { const n = new Set(prev); n.delete(currentQ); return n })())
+                }}
+                placeholder="Write your code here..."
+                spellCheck={false}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+              />
             </div>
-            {displayTranscript ? (
-              <p className="c-transcript__content">{displayTranscript}</p>
-            ) : (
-              <p className="c-transcript__placeholder">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true">
-                  <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z" />
-                </svg>
-                {answering ? 'Listening... speak now.' : 'Click "Start Answer" to begin transcription.'}
-              </p>
-            )}
-          </div>
+          ) : (
+            <div className="c-transcript" aria-live="polite" aria-label="Speech transcript">
+              <div className="c-transcript__header">
+                <h4>Transcript</h4>
+                <span className={`c-transcript__status ${transcriptConnected ? 'is-live' : ''}`}>
+                  {transcriptConnected ? '● Live' : '○ Idle'}
+                </span>
+              </div>
+              {displayTranscript ? (
+                <p className="c-transcript__content">{displayTranscript}</p>
+              ) : (
+                <p className="c-transcript__placeholder">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true">
+                    <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z" />
+                  </svg>
+                  {answering ? 'Listening... speak now.' : 'Click "Start Answer" to begin transcription.'}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

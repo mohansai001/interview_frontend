@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import valueMomentumLogo from '../../assets/ValueMomentum_logo.png'
 
 export default function TagLogin() {
   const navigate = useNavigate()
@@ -41,18 +42,16 @@ export default function TagLogin() {
     <div className="c-login">
       <div className="c-login__left" aria-hidden="true">
         <div className="c-login__brand-icon">
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
-          </svg>
+          <img src={valueMomentumLogo} alt="ValueMomentum logo" className="c-login__brand-logo" />
         </div>
         <p className="c-login__welcome">Welcome to</p>
-        <h1 className="c-login__platform-name">TAG Team Portal</h1>
+        <h1 className="c-login__platform-name">ValueMomentum Interview Portal</h1>
         <p className="c-login__sub">Sign in with your organizational account</p>
       </div>
 
       <div className="c-login__right">
         <div className="c-login__form-wrap">
-          <h2>TAG Login</h2>
+          <h2>Sign in</h2>
           <p className="c-login__form-desc">Use your demo credentials to continue</p>
 
           <form onSubmit={handleSubmit} noValidate>
@@ -110,7 +109,7 @@ export default function TagLogin() {
             <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true">
               <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
             </svg>
-            Secure access for TAG team members
+            Secure access for ValueMomentum interview team
           </p>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import valueMomentumLogo from '../../assets/ValueMomentum_logo.png'
 import { useCandidateContext } from '../CandidateApp'
 
 export default function CandidateLogin() {
@@ -18,7 +19,7 @@ export default function CandidateLogin() {
     setLoading(true)
     setError('')
     try {
-      const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+      const base = import.meta.env.VITE_API_BASE_URL || 'https://interview-prep-backend-c2hjedhmhvfthdgc.eastus-01.azurewebsites.net'
       const res = await fetch(`${base}/interview/start-interview/${candidateId.trim()}`, { method: 'POST' })
       if (!res.ok) throw new Error('Invalid Interview ID or interview not found.')
       const detailsRes = await fetch(`${base}/interview/get-interview-details/${candidateId.trim()}`)
@@ -49,12 +50,10 @@ export default function CandidateLogin() {
       {/* Left decorative panel */}
       <div className="c-login__left" aria-hidden="true">
         <div className="c-login__brand-icon">
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
-          </svg>
+          <img src={valueMomentumLogo} alt="ValueMomentum logo" className="c-login__brand-logo" />
         </div>
         <p className="c-login__welcome">Welcome to</p>
-        <h1 className="c-login__platform-name">Interview Platform</h1>
+        <h1 className="c-login__platform-name">ValueMomentum Interview Portal</h1>
         <p className="c-login__sub">Please login using your Interview ID</p>
       </div>
 

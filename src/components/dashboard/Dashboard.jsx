@@ -133,7 +133,6 @@ export default function Dashboard() {
                 <th scope="col">Role</th>
                 <th scope="col">Level</th>
                 <th scope="col">TSC</th>
-                <th scope="col">L1 Status</th>
                 <th scope="col">Feedback</th>
                 <th scope="col">Status</th>
               </tr>
@@ -142,7 +141,7 @@ export default function Dashboard() {
               {loading ? (
                 <tr><td colSpan={8} className="table-empty">Loading...</td></tr>
               ) : pageData.length === 0 ? (
-                <tr><td colSpan={8} className="table-empty">No interviews found.</td></tr>
+                <tr><td colSpan={7} className="table-empty">No interviews found.</td></tr>
               ) : (
                 pageData.map((row) => (
                   <tr key={row.interview_id}>
@@ -152,7 +151,6 @@ export default function Dashboard() {
                     <td>{row.role ?? '—'}</td>
                     <td>{row.level ?? '—'}</td>
                     <td>{row.tsc ?? '—'}</td>
-                    <td><span className={`status-badge ${STATUS_CLASS[row.l1_status] ?? ''}`}>{row.l1_status ?? '—'}</span></td>
                     <td>
                       <button type="button" className="feedback-btn" onClick={() => openFeedback(row)}>
                         Feedback
