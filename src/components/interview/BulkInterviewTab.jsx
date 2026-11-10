@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 import SelectField from '../forms/SelectField'
 import FormInputField from '../forms/FormInputField'
@@ -8,72 +8,48 @@ import { env } from '../../config/env'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-function EmailChipsInput({ emails, onChange }) {
-  const [draft, setDraft] = useState('')
+function CandidateRowsInput({ candidates, onChange }) {
+  const [draftName, setDraftName] = useState('')
+  const [draftEmail, setDraftEmail] = useState('')
   const [draftError, setDraftError] = useState('')
-  const inputRef = useRef(null)
 
-  const commitDraft = (raw = draft) => {
-    const trimmed = raw.trim().replace(/[,;]+$/, '').trim()
-    if (!trimmed) return false
-    if (!EMAIL_RE.test(trimmed)) { setDraftError('Invalid email address.'); return false }
-    if (emails.includes(trimmed)) { setDraftError('Email already added.'); return false }
-    onChange([...emails, trimmed])
-    setDraft('')
+  const commit = () => {
+    const name = draftName.trim()
+    const email = draftEmail.trim()
+    if (!name) { setDraftError('Name is required.'); return false }
+    if (!EMAIL_RE.test(email)) { setDraftError('Invalid email address.'); return false }
+    if (candidates.some((c) => c.candidate_email === email)) { setDraftError('Email already added.'); return false }
+    onChange([...candidates, { candidate_name: name, candidate_email: email }])
+    setDraftName('')
+    setDraftEmail('')
     setDraftError('')
     return true
   }
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' || e.key === ',' || e.key === ';') {
-      e.preventDefault()
-      commitDraft()
-    } else if (e.key === 'Backspace' && !draft && emails.length > 0) {
-      onChange(emails.slice(0, -1))
-    }
-  }
-
-  const handlePaste = (e) => {
-    e.preventDefault()
-    const added = e.clipboardData.getData('text')
-      .split(/[\n,;]+/).map((s) => s.trim()).filter(Boolean)
-      .filter((p) => EMAIL_RE.test(p) && !emails.includes(p))
-    if (added.length) onChange([...emails, ...added])
-  }
-
   return (
     <>
-      <div className="email-chips-wrap" role="group" aria-label="Candidate emails" onClick={() => inputRef.current?.focus()}>
-        {emails.map((email, i) => (
-          <span key={email} className="email-chip">
-            {email}
-            <button type="button" className="email-chip__remove"
-              onClick={(e) => { e.stopPropagation(); onChange(emails.filter((_, j) => j !== i)) }}
-              aria-label={`Remove ${email}`}>×</button>
-          </span>
-        ))}
-        <input
-          ref={inputRef}
-          type="text"
-          className="email-chips-input"
-          value={draft}
-          onChange={(e) => { setDraft(e.target.value); setDraftError('') }}
-          onKeyDown={handleKeyDown}
-          onBlur={() => commitDraft()}
-          onPaste={handlePaste}
-          placeholder={emails.length === 0 ? 'Type email and press Enter or comma' : 'Add another…'}
-          aria-label="Type a candidate email"
-        />
-        <button
-          type="button"
-          className="email-chips-add"
-          onClick={() => { commitDraft(); inputRef.current?.focus() }}
-          aria-label="Add email"
-          tabIndex={0}
-        >
-          <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true">
-            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-          </svg>
+      {candidates.length > 0 && (
+        <div className="candidate-rows">
+          {candidates.map((c, i) => (
+            <div key={c.candidate_email} className="candidate-row">
+              <span className="candidate-row__name">{c.candidate_name}</span>
+              <span className="candidate-row__email">{c.candidate_email}</span>
+              <button type="button" className="candidate-row__remove"
+                onClick={() => onChange(candidates.filter((_, j) => j !== i))}
+                aria-label={`Remove ${c.candidate_email}`}>×</button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="candidate-add-row">
+        <input type="text" className="candidate-add-row__input" placeholder="Candidate name"
+          value={draftName} onChange={(e) => { setDraftName(e.target.value); setDraftError('') }} />
+        <input type="email" className="candidate-add-row__input" placeholder="Candidate email"
+          value={draftEmail} onChange={(e) => { setDraftEmail(e.target.value); setDraftError('') }}
+          onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), commit())} />
+        <button type="button" className="candidate-add-row__btn" onClick={commit} aria-label="Add candidate">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg>
+          Add
         </button>
       </div>
       {draftError && <p className="field-error">{draftError}</p>}
@@ -81,8 +57,8 @@ function EmailChipsInput({ emails, onChange }) {
   )
 }
 
-EmailChipsInput.propTypes = {
-  emails: PropTypes.arrayOf(PropTypes.string).isRequired,
+CandidateRowsInput.propTypes = {
+  candidates: PropTypes.arrayOf(PropTypes.shape({ candidate_name: PropTypes.string, candidate_email: PropTypes.string })).isRequired,
   onChange: PropTypes.func.isRequired,
 }
 
@@ -91,7 +67,7 @@ const INIT = {
 }
 
 export default function BulkInterviewTab() {
-  const [emails, setEmails] = useState([])
+  const [candidates, setCandidates] = useState([])
   const [form, setForm] = useState(INIT)
   const [errors, setErrors] = useState({})
   const [tscOptions, setTscOptions] = useState([])
@@ -122,7 +98,7 @@ export default function BulkInterviewTab() {
 
   const validate = () => {
     const e = {}
-    if (emails.length === 0) e.emails = 'At least one candidate email is required.'
+    if (candidates.length === 0) e.emails = 'At least one candidate is required.'
     if (!form.l2_panel.trim()) e.l2_panel = 'Panel name is required.'
     if (!form.l2_email.trim()) e.l2_email = 'Panel email is required.'
     else if (!EMAIL_RE.test(form.l2_email.trim())) e.l2_email = 'Invalid email address.'
@@ -143,7 +119,7 @@ export default function BulkInterviewTab() {
     try {
       const fd = new FormData()
       fd.append('user_id', Number(localStorage.getItem('user_id') ?? 1))
-      fd.append('candidates', JSON.stringify(emails.map((e) => ({ candidate_name: e.split('@')[0], candidate_email: e }))))
+      fd.append('candidates', JSON.stringify(candidates))
       fd.append('l2_panel', form.l2_panel.trim())
       fd.append('l2_email', form.l2_email.trim())
       fd.append('level', form.level.trim())
@@ -156,10 +132,11 @@ export default function BulkInterviewTab() {
         body: fd,
       })
       if (!res.ok) throw new Error(await res.text())
-      setEmails([])
+      const count = candidates.length
+      setCandidates([])
       setForm(INIT)
       setErrors({})
-      setSuccessMessage(`Bulk interviews created for ${emails.length} candidate${emails.length !== 1 ? 's' : ''}.`)
+      setSuccessMessage(`Bulk interviews created for ${count} candidate${count !== 1 ? 's' : ''}.`)
     } catch {
       setGeneralError('Unable to create bulk interviews. Please try again.')
     } finally {
@@ -167,7 +144,7 @@ export default function BulkInterviewTab() {
     }
   }
 
-  const isFormComplete = emails.length > 0 && form.l2_panel && form.l2_email && form.level && form.jd_name && form.role && form.tsc
+  const isFormComplete = candidates.length > 0 && form.l2_panel && form.l2_email && form.level && form.jd_name && form.role && form.tsc
 
   return (
     <form onSubmit={handleGenerate} noValidate>
@@ -179,18 +156,17 @@ export default function BulkInterviewTab() {
             </svg>
             <h2 id="bulk-heading">Bulk Interview Generation</h2>
           </div>
-          <p>Enter multiple candidate emails and shared interview details.</p>
+          <p>Enter candidate details and shared interview information.</p>
           <hr className="panel__divider" aria-hidden="true" />
         </div>
 
         <div className="fields-grid">
-          {/* Candidate Emails — full width */}
           <div className="form-group fields-grid__full">
-            <label className="form-label">
-              Candidate Emails <span aria-hidden="true">*</span>
-              <span className="form-label__meta"> — press Enter or comma after each email</span>
-            </label>
-            <EmailChipsInput emails={emails} onChange={(next) => { setEmails(next); if (errors.emails) setErrors((p) => ({ ...p, emails: '' })) }} />
+            <label className="form-label">Candidates <span aria-hidden="true">*</span></label>
+            <CandidateRowsInput
+              candidates={candidates}
+              onChange={(next) => { setCandidates(next); if (errors.emails) setErrors((p) => ({ ...p, emails: '' })) }}
+            />
             {errors.emails && <p className="field-error" role="alert">{errors.emails}</p>}
           </div>
 
@@ -247,8 +223,8 @@ export default function BulkInterviewTab() {
             <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
           </svg>
           {isGenerating
-            ? `Creating ${emails.length} interview${emails.length !== 1 ? 's' : ''}…`
-            : `Create${emails.length > 0 ? ` ${emails.length}` : ''} Bulk Interview${emails.length !== 1 ? 's' : ''}`}
+            ? `Creating ${candidates.length} interview${candidates.length !== 1 ? 's' : ''}…`
+            : `Create${candidates.length > 0 ? ` ${candidates.length}` : ''} Bulk Interview${candidates.length !== 1 ? 's' : ''}`}
         </button>
       </section>
     </form>

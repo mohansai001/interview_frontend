@@ -19,7 +19,7 @@ export default function CandidateLogin() {
     setLoading(true)
     setError('')
     try {
-      const base = import.meta.env.VITE_API_BASE_URL || 'https://interview-prep-backend-c2hjedhmhvfthdgc.eastus-01.azurewebsites.net'
+      const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
       const res = await fetch(`${base}/interview/start-interview/${candidateId.trim()}`, { method: 'POST' })
       if (!res.ok) throw new Error('Invalid Interview ID or interview not found.')
       const detailsRes = await fetch(`${base}/interview/get-interview-details/${candidateId.trim()}`)

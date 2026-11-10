@@ -267,7 +267,10 @@ export default function InterviewRoom() {
 
   useEffect(() => {
     if (showInstructions) return
-    const id = setInterval(() => setTimeLeft((t) => Math.max(0, t - 1)), 1000)
+    const id = setInterval(() => setTimeLeft((t) => {
+      if (t <= 1) { clearInterval(id); handleEndInterview(); return 0 }
+      return t - 1
+    }), 1000)
     return () => clearInterval(id)
   }, [showInstructions])
 

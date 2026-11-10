@@ -1395,3 +1395,15 @@ body.dark .form-input::placeholder {
   .search-input { width: 180px; }
 }
 
+
+.candidate-rows { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.candidate-row { display: flex; align-items: center; gap: 10px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; }
+.candidate-row__name { font-weight: 600; font-size: 13px; color: #1e293b; min-width: 120px; }
+.candidate-row__email { font-size: 13px; color: #475569; flex: 1; }
+.candidate-row__remove { background: none; border: none; cursor: pointer; color: #94a3b8; font-size: 18px; line-height: 1; padding: 0 4px; }
+.candidate-row__remove:hover { color: #ef4444; }
+.candidate-add-row { display: flex; gap: 8px; align-items: center; }
+.candidate-add-row__input { flex: 1; height: 38px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0 12px; font-size: 13px; outline: none; }
+.candidate-add-row__input:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,.15); }
+.candidate-add-row__btn { display: flex; align-items: center; gap: 6px; height: 38px; padding: 0 16px; background: #2563eb; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.candidate-add-row__btn:hover { background: #1d4ed8; }

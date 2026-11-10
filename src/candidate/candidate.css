@@ -1002,8 +1002,8 @@
 
 .c-transcript__content {
   min-height: 60px;
-  font-size: 13px;
-  color: var(--c-text);
+  max-height: 200px;
+  overflow-y: auto;
   line-height: 1.6;
   margin: 0;
   white-space: pre-wrap;
