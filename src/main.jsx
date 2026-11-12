@@ -8,6 +8,7 @@ import SystemCheck from './candidate/pages/SystemCheck.jsx'
 import ConsentPage from './candidate/pages/ConsentPage.jsx'
 import CalibrationPage from './candidate/pages/CalibrationPage.jsx'
 import InterviewRoom from './candidate/pages/InterviewRoom.jsx'
+import ThankYouPage from './candidate/pages/ThankYouPage.jsx'
 import TagLogin from './components/auth/TagLogin.jsx'
 import './styles/index.css'
 import './index.css'
@@ -38,6 +39,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/candidate/consent"       element={<ConsentPage />} />
           <Route path="/candidate/calibration"   element={<CalibrationPage />} />
           <Route path="/candidate/interview"     element={<InterviewRoom />} />
+          <Route path="/candidate/thank-you"     element={<ThankYouPage />} />
         </Route>
 
         {/* Fallback */}

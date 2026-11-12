@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PropTypes from 'prop-types'
+import Editor from '@monaco-editor/react'
 import { env } from '../../config/env'
 import { useCandidateContext } from '../CandidateApp'
 
@@ -322,6 +323,7 @@ export default function InterviewRoom() {
     if (interviewId) {
       fetch(`${env.apiBaseUrl.replace(/\/$/, '')}/interview/end_interview/${interviewId}`, { method: 'POST' }).catch(() => {})
     }
+    navigate('/candidate/thank-you', { replace: true })
   }
 
   // ── Completion screen ─────────────────────────────────────────────────────
@@ -347,6 +349,7 @@ export default function InterviewRoom() {
   const question = questions[currentQ]
   const isAnswered = answered.has(currentQ)
   const isCoding = question?.question_type?.toLowerCase() === 'coding'
+  const [codeLanguage, setCodeLanguage] = useState('python')
   const displayTranscript = questionTranscripts[question?.question_number] || liveTranscript || ''
 
   if (!question && questions.length === 0) {
