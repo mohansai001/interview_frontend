@@ -1,4 +1,4 @@
-export const DEFAULT_TSC_OPTIONS = ["TSC 1", "TSC 2", "TSC 3", "TSC 4"];
+export const DEFAULT_TSC_OPTIONS = ["QE-TSC"];
 
 export const DEFAULT_ROLE_OPTIONS = [
   "Software Engineer",
