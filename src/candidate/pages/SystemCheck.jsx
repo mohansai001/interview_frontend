@@ -62,9 +62,15 @@ function CameraCard({ status, onTest }) {
         <StatusBadge status={status} />
       </div>
       <div className="c-check-card__preview">
-        {status === STATUS.success ? (
-          <video ref={videoRef} className="c-preview-video" muted playsInline aria-label="Camera preview" />
-        ) : (
+        <video
+          ref={videoRef}
+          className="c-preview-video"
+          muted
+          playsInline
+          aria-label="Camera preview"
+          style={{ display: status === STATUS.success ? 'block' : 'none' }}
+        />
+        {status !== STATUS.success && (
           <div className="c-preview-placeholder" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
               <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z" />

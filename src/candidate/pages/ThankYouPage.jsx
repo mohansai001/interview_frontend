@@ -7,11 +7,7 @@
  * Key Behavior: Shows a success acknowledgement with a clear call to action to return to the login page.
  * Accessibility: Uses semantic heading and main landmark; keeps actions keyboard-focusable and readable.
  */
-import { useNavigate } from 'react-router-dom'
-
 export default function ThankYouPage() {
-  const navigate = useNavigate()
-
   return (
     <main
       style={{
@@ -78,13 +74,12 @@ export default function ThankYouPage() {
         </span>
       </div>
 
-      <button
-        type="button"
-        className="c-btn c-btn--outline"
-        onClick={() => navigate('/candidate/login')}
+      <p
+        style={{ margin: 0, fontSize: 13, color: '#64748b', cursor: 'pointer', textDecoration: 'underline' }}
+        onClick={() => window.close()}
       >
-        Back to Login
-      </button>
+        Close this window
+      </p>
     </main>
   )
 }
