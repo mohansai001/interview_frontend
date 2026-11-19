@@ -11,6 +11,7 @@ const INSTRUCTIONS = [
   { icon: 'person', text: 'Make sure your face is clearly visible in the camera.' },
   { icon: 'block',  text: 'Do not switch tabs or open other applications.' },
   { icon: 'quiet',  text: 'Ensure a quiet environment for the best experience.' },
+  { icon: 'book',   text: 'Click "Submit Answer" after finishing each answer to save your response.' },
 ]
 
 function InstrIcon({ type }) {
@@ -305,10 +306,17 @@ export default function InterviewRoom() {
     setAnswering(false)
   }
 
-  const handleQuestionChange = (nextIndex) => {
-    if (nextIndex < 0 || nextIndex >= questions.length) return
+  const [submittedAnswers, setSubmittedAnswers] = useState(new Set())
+
+  const handleSubmitAnswer = () => {
     const q = questions[currentQ]
     submitTranscription(q?.question, questionTranscripts[q?.question_number] || liveTranscript)
+    setAnswered((prev) => new Set([...prev, currentQ]))
+    setSubmittedAnswers((prev) => new Set([...prev, q?.question_number]))
+  }
+
+  const handleQuestionChange = (nextIndex) => {
+    if (nextIndex < 0 || nextIndex >= questions.length) return
     setAnswering(false)
     setCurrentQ(nextIndex)
     setLiveTranscript(questionTranscripts[questions[nextIndex]?.question_number] || '')
@@ -341,7 +349,7 @@ export default function InterviewRoom() {
           <span style={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>Feedback Status</span>
           <span style={{ background: '#fef9c3', color: '#854d0e', fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 20 }}>Pending</span>
         </div>
-        <button type="button" className="c-btn c-btn--outline" onClick={() => navigate('/candidate/login')}>Back to Login</button>
+        <p style={{ margin: 0, fontSize: 13, color: '#64748b', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => window.close()}>Close this window</p>
       </div>
     )
   }
@@ -461,7 +469,8 @@ export default function InterviewRoom() {
               <span className="c-badge c-badge--time">{question?.source}</span>
             </div>
             <h4>{question?.question}</h4>
-            <div className="c-question-card__actions">
+            <div className="c-question-card__actions" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {!isCoding && (answering
                 ? <button type="button" className="c-end-btn" onClick={handleEndAnswer}>End Answer</button>
                 : <button type="button" className="c-start-btn" onClick={handleStartAnswer}>Start Answer</button>
@@ -473,6 +482,17 @@ export default function InterviewRoom() {
                   </svg>
                   Answered
                 </span>
+              )}
+              </div>
+              {!answering && (
+                submittedAnswers.has(questions[currentQ]?.question_number)
+                  ? <span className="c-answered-badge" role="status" style={{ marginLeft: 'auto' }}>
+                      <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true">
+                        <path d="M9 16.2l-3.5-3.5-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" />
+                      </svg>
+                      Submitted
+                    </span>
+                  : <button type="button" className="c-start-btn" onClick={handleSubmitAnswer} disabled={!displayTranscript && !questionTranscripts[question?.question_number]} style={{ marginLeft: 'auto' }}>Submit Answer</button>
               )}
             </div>
             <div className="c-face-monitor" aria-live="polite">

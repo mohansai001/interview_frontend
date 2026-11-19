@@ -213,7 +213,7 @@ export default function Dashboard() {
             </div>
 
             <div className="feedback-modal__content">
-              {selectedFeedback.l1_result || 'No L1 feedback available for this interview.'}
+              {(selectedFeedback.l1_result || 'No L1 feedback available for this interview.').replace(/#{1,6}\s*/g, '').replace(/\*\*/g, '')}
             </div>
           </div>
         </div>
