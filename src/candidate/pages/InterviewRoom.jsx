@@ -41,7 +41,6 @@ export default function InterviewRoom() {
   const [answering, setAnswering] = useState(false)
   const [answered, setAnswered] = useState(new Set())
   const [timeLeft, setTimeLeft] = useState(2385)
-  const [fsWarning, setFsWarning] = useState(false)
   const [liveTranscript, setLiveTranscript] = useState('')
   const [questionTranscripts, setQuestionTranscripts] = useState({})
   const [transcriptConnected, setTranscriptConnected] = useState(false)
@@ -255,8 +254,7 @@ export default function InterviewRoom() {
     if (showInstructions) return
     const handler = () => {
       if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-        setFsWarning(true)
-        setTimeout(() => setFsWarning(false), 3000)
+        handleEndInterview()
       }
     }
     document.addEventListener('fullscreenchange', handler)
@@ -397,12 +395,6 @@ export default function InterviewRoom() {
 
   return (
     <div className="c-interview" ref={roomRef}>
-      {fsWarning && (
-        <div className="c-fs-warning" role="alert" style={{ cursor: 'pointer' }} onClick={enterFullscreen}>
-          ⚠️ You exited fullscreen. Click here to return to fullscreen mode.
-        </div>
-      )}
-
       <header className="c-interview-header">
         <div className="c-interview-header__brand">
           <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true" style={{ color: '#2563eb' }}>
